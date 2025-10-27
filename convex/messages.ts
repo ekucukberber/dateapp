@@ -207,6 +207,10 @@ export const leaveChat = mutation({
       endedAt: Date.now(),
     });
 
+    // Remove both users from queue to prevent immediate rematching
+    await ctx.db.patch(chatSession.user1Id, { isInQueue: false });
+    await ctx.db.patch(chatSession.user2Id, { isInQueue: false });
+
     // Delete all messages for privacy
     const messages = await ctx.db
       .query("messages")
