@@ -6,7 +6,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
 import { useState, useEffect, useRef } from 'react';
-import { Send, Clock, LogOut, Heart, X, Loader2 } from 'lucide-react';
+import { Send, Clock, LogOut, Heart, X, Loader2, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/chat/$chatId')({
@@ -34,6 +34,7 @@ function ChatPage() {
   const leaveChat = useMutation(api.messages.leaveChat);
   const makeDecision = useMutation(api.decisions.makeDecision);
   const setTyping = useMutation(api.messages.setTyping);
+  const skipToReveal = useMutation(api.decisions.skipToReveal);
 
   // Handle typing indicator with debouncing
   const handleTypingChange = (value: string) => {
@@ -217,6 +218,19 @@ function ChatPage() {
     }
   };
 
+  const handleSkip = async () => {
+    try {
+      await skipToReveal({
+        chatSessionId: chatId as Id<"chatSessions">,
+      });
+      // No toast - the button will highlight to show the vote
+      // Convex will automatically update chatData and skipCount
+    } catch (error) {
+      console.error('Error skipping:', error);
+      toast.error('Failed to skip. Please try again.');
+    }
+  };
+
   // Loading state
   if (!isLoaded || chatData === undefined) {
     return (
@@ -251,7 +265,7 @@ function ChatPage() {
     );
   }
 
-  const { messages, chatSession, otherUser, currentUserId, otherUserIsTyping } = chatData;
+  const { messages, chatSession, otherUser, currentUserId, otherUserIsTyping, skipCount } = chatData;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -272,9 +286,25 @@ function ChatPage() {
           </Button>
         </div>
         {chatSession.phase === 'speed_dating' && (
-          <div className="flex items-center gap-2 text-lg font-mono">
-            <Clock className="h-5 w-5" />
-            <span className="font-bold">{timeRemaining}</span>
+          <div className="flex items-center gap-4">
+            <Button
+              variant={skipCount > 0 ? "default" : "outline"}
+              size="sm"
+              onClick={handleSkip}
+              className={`gap-2 font-bold transition-all ${
+                skipCount === 1
+                  ? 'bg-black text-white animate-pulse'
+                  : skipCount === 2
+                  ? 'bg-green-600 text-white'
+                  : ''
+              }`}
+            >
+              Skip to Profiles ({skipCount}/2)
+            </Button>
+            <div className="flex items-center gap-2 text-lg font-mono">
+              <Clock className="h-5 w-5" />
+              <span className="font-bold">{timeRemaining}</span>
+            </div>
           </div>
         )}
       </div>
@@ -359,22 +389,32 @@ function ChatPage() {
         <div className="border-b-2 border-black px-6 py-4 bg-white">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center gap-4 p-4 border-2 border-black shadow-3d">
-              {otherUser.image && (
-                <img
-                  src={otherUser.image}
-                  alt={otherUser.name}
-                  className="w-16 h-16 rounded-full border-2 border-black"
-                />
-              )}
+              <div className="w-16 h-16 rounded-full border-2 border-black overflow-hidden bg-gray-100 flex-shrink-0">
+                {otherUser.photos && otherUser.photos.length > 0 ? (
+                  <img
+                    src={otherUser.photos[0]}
+                    alt={otherUser.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold">{otherUser.name}</h3>
+                <h3 className="text-xl font-bold">{otherUser.name || 'Anonymous'}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {otherUser.age && `${otherUser.age} years old`}
+                  {otherUser.age ? `${otherUser.age} years old` : 'Age not set'}
                   {otherUser.age && otherUser.gender && ' • '}
-                  {otherUser.gender}
+                  {otherUser.gender && `${otherUser.gender.charAt(0).toUpperCase() + otherUser.gender.slice(1)}`}
                 </p>
-                {otherUser.bio && (
+                {otherUser.bio ? (
                   <p className="mt-2 text-sm">{otherUser.bio}</p>
+                ) : (
+                  <p className="mt-2 text-sm text-muted-foreground italic">
+                    No bio yet
+                  </p>
                 )}
               </div>
               <div className="text-4xl">❤️</div>

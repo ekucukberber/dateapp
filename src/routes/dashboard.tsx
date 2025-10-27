@@ -1,10 +1,10 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { useUser, useClerk } from '@clerk/tanstack-react-start';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { useState, useEffect, Fragment } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect, Fragment, useRef } from 'react';
+import { Loader2, User, Heart, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Route = createFileRoute('/dashboard')({
@@ -21,6 +21,11 @@ function Dashboard() {
   const queueStatus = useQuery(api.queue.status);
   const joinQueue = useMutation(api.queue.join);
   const leaveQueue = useMutation(api.queue.leave);
+  const pendingRequests = useQuery(api.chatRequests.listPending);
+  const matches = useQuery(api.matches.list);
+
+  // Track previous matches state to detect when a pending request becomes active
+  const prevMatchesRef = useRef(matches);
 
   // Handler functions
   const handleCancelSearch = async () => {
@@ -82,6 +87,35 @@ function Dashboard() {
     }
   }, [queueStatus, navigate]);
 
+  // Auto-redirect when a new chat session is created (request accepted)
+  useEffect(() => {
+    if (!matches || !prevMatchesRef.current) {
+      prevMatchesRef.current = matches;
+      return;
+    }
+
+    // Check if any match has a new active chat session
+    matches.forEach((match) => {
+      const prevMatch = prevMatchesRef.current?.find((m) => m._id === match._id);
+
+      if (
+        prevMatch &&
+        !prevMatch.hasActiveChat &&
+        match.hasActiveChat &&
+        match.chatSessionId
+      ) {
+        // New chat session created! Redirect
+        toast.success('Chat is ready!');
+        navigate({
+          to: '/chat/$chatId',
+          params: { chatId: match.chatSessionId },
+        });
+      }
+    });
+
+    prevMatchesRef.current = matches;
+  }, [matches, navigate]);
+
   const handleFindMatch = async () => {
     setIsJoining(true);
     try {
@@ -115,7 +149,30 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex gap-2">
+        <Link to="/profile">
+          <Button variant="outline" size="sm" className="gap-2">
+            <User className="h-4 w-4" />
+            Profile
+          </Button>
+        </Link>
+        <Link to="/matches">
+          <Button variant="outline" size="sm" className="gap-2">
+            <Heart className="h-4 w-4" />
+            Matches
+          </Button>
+        </Link>
+        <Link to="/notifications">
+          <Button variant="outline" size="sm" className="gap-2 relative">
+            <Bell className="h-4 w-4" />
+            Notifications
+            {pendingRequests && pendingRequests.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                {pendingRequests.length}
+              </span>
+            )}
+          </Button>
+        </Link>
         <Button variant="ghost" onClick={handleSignOut} className="border-none shadow-none">
           Sign out
         </Button>

@@ -63,7 +63,30 @@ export const join = mutation({
       .withIndex("by_queue", (q) => q.eq("isInQueue", true))
       .collect();
 
-    const matchedUser = waitingUsers.find((u) => u._id !== user._id);
+    // Filter users based on gender preferences (if set)
+    const compatibleUsers = waitingUsers.filter((u) => {
+      if (u._id === user._id) return false;
+
+      // If either user hasn't set preferences, allow match
+      if (!user.genderPreference || !u.genderPreference) return true;
+
+      // Check if current user's preference matches other user's gender
+      const userWantsOther =
+        user.genderPreference === "both" ||
+        (user.gender && user.genderPreference === u.gender);
+
+      // Check if other user's preference matches current user's gender
+      const otherWantsUser =
+        u.genderPreference === "both" ||
+        (u.gender && u.genderPreference === user.gender);
+
+      return userWantsOther && otherWantsUser;
+    });
+
+    // Randomly select from compatible users to ensure fairness
+    const matchedUser = compatibleUsers.length > 0
+      ? compatibleUsers[Math.floor(Math.random() * compatibleUsers.length)]
+      : undefined;
 
     if (matchedUser) {
       // CLAIM-FIRST PATTERN: Remove matched user from queue atomically

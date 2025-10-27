@@ -66,12 +66,18 @@ export const list = query({
       otherUserLastTyping &&
       (Date.now() - otherUserLastTyping) < typingTimeout;
 
+    // Calculate skip count for speed dating phase
+    const skipCount = chatSession.phase === "speed_dating"
+      ? (chatSession.user1WantsSkip ? 1 : 0) + (chatSession.user2WantsSkip ? 1 : 0)
+      : 0;
+
     return {
       messages,
       chatSession,
       otherUser,
       currentUserId: user._id, // Add current user's Convex ID for message ownership comparison
       otherUserIsTyping: isTypingActive || false,
+      skipCount,
     };
   },
 });

@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npx convex deploy -y --cmd 'npm run build'",
   "rewrites": [
     {
       "source": "/_assets/(.*)",

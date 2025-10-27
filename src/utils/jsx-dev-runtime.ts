@@ -16,9 +16,9 @@ export const jsxDEV = (
 ) => {
   // Symbol types (Fragment, Suspense, etc.) should not receive __source/__self
   if (typeof type === 'symbol') {
-    return jsxRuntime(type, props, key)
+    return jsxRuntime(type as any, props, key)
   }
-  
+
   // For other components, pass through without adding debug props
   // This avoids React 19 key warnings while maintaining Vercel compatibility
   return jsxRuntime(type, props, key)

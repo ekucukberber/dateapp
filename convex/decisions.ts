@@ -115,3 +115,88 @@ export const makeDecision = mutation({
     };
   },
 });
+
+/**
+ * Skip speed dating phase and move to profile reveal
+ */
+export const skipToReveal = mutation({
+  args: {
+    chatSessionId: v.id("chatSessions"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthenticated");
+
+    // Get current user
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    // Get chat session
+    const chatSession = await ctx.db.get(args.chatSessionId);
+    if (!chatSession) throw new Error("Chat session not found");
+
+    // Verify user is part of this chat
+    if (chatSession.user1Id !== user._id && chatSession.user2Id !== user._id) {
+      throw new Error("Unauthorized");
+    }
+
+    // Only allow skip during speed_dating phase
+    if (chatSession.phase !== "speed_dating") {
+      throw new Error("Can only skip during speed dating phase");
+    }
+
+    // Determine which user this is
+    const isUser1 = chatSession.user1Id === user._id;
+
+    // Update the user's skip preference
+    const updates: any = {};
+
+    if (isUser1) {
+      updates.user1WantsSkip = true;
+    } else {
+      updates.user2WantsSkip = true;
+    }
+
+    await ctx.db.patch(args.chatSessionId, updates);
+
+    // Get updated session
+    const updatedSession = await ctx.db.get(args.chatSessionId);
+    if (!updatedSession) throw new Error("Session not found");
+
+    // Check if both users want to skip
+    const user1Skip = isUser1 ? true : updatedSession.user1WantsSkip;
+    const user2Skip = isUser1 ? updatedSession.user2WantsSkip : true;
+
+    let matchCreated = false;
+
+    // If both users want to skip
+    if (user1Skip && user2Skip) {
+      // Create match record
+      await ctx.db.insert("matches", {
+        user1Id: chatSession.user1Id,
+        user2Id: chatSession.user2Id,
+        chatSessionId: args.chatSessionId,
+        matchedAt: Date.now(),
+      });
+
+      matchCreated = true;
+
+      // Update session to extended phase
+      await ctx.db.patch(args.chatSessionId, {
+        status: "active",
+        phase: "extended",
+      });
+    }
+
+    return {
+      success: true,
+      bothSkipped: user1Skip && user2Skip,
+      matchCreated,
+      skipCount: (user1Skip ? 1 : 0) + (user2Skip ? 1 : 0),
+    };
+  },
+});

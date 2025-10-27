@@ -41,6 +41,10 @@ export default defineSchema({
     user1WantsContinue: v.optional(v.boolean()),
     user2WantsContinue: v.optional(v.boolean()),
 
+    // Skip to profile reveal
+    user1WantsSkip: v.optional(v.boolean()),
+    user2WantsSkip: v.optional(v.boolean()),
+
     // Typing indicators
     user1Typing: v.optional(v.boolean()),
     user1LastTyping: v.optional(v.number()),
@@ -78,4 +82,18 @@ export default defineSchema({
     .index("by_user2", ["user2Id"])
     .index("by_users", ["user1Id", "user2Id"])
     .index("by_chat_session", ["chatSessionId"]),
+
+  // Chat requests table (for reconnecting with matches)
+  chatRequests: defineTable({
+    fromUserId: v.id("users"),
+    toUserId: v.id("users"),
+    matchId: v.id("matches"),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("declined")),
+    createdAt: v.number(),
+    respondedAt: v.optional(v.number()),
+  })
+    .index("by_from_user", ["fromUserId"])
+    .index("by_to_user", ["toUserId"])
+    .index("by_status", ["status"])
+    .index("by_to_user_and_status", ["toUserId", "status"]),
 });
