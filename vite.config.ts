@@ -8,14 +8,6 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  resolve: {
-    alias: {
-      'react/jsx-dev-runtime': path.resolve(
-        __dirname,
-        'src/utils/jsx-dev-runtime.ts',
-      ),
-    },
-  },
   plugins: [
     tsConfigPaths({
       projects: ['./tsconfig.json'],

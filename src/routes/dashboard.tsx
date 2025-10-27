@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useUser, useClerk } from '@clerk/tanstack-react-start';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Loader2 } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard')({
@@ -117,8 +117,8 @@ function Dashboard() {
 
       <div className="text-center space-y-12">
         {!queueStatus.inQueue && !queueStatus.matched && (
-          <>
-            <div className="space-y-4">
+          <Fragment key="idle">
+            <div key="idle-text" className="space-y-4">
               <h1 className="text-5xl font-bold">Ready, {user?.username || user?.firstName}?</h1>
               <p className="text-lg text-muted-foreground">
                 Click below to find someone new
@@ -126,6 +126,7 @@ function Dashboard() {
             </div>
 
             <Button
+              key="idle-button"
               size="lg"
               className="px-16 py-8 text-2xl"
               onClick={handleFindMatch}
@@ -140,19 +141,19 @@ function Dashboard() {
                 'Find Match'
               )}
             </Button>
-          </>
+          </Fragment>
         )}
 
         {queueStatus.inQueue && !queueStatus.matched && (
-          <>
-            <div className="space-y-4">
+          <Fragment key="searching">
+            <div key="searching-text" className="space-y-4">
               <h1 className="text-5xl font-bold">Searching...</h1>
               <p className="text-lg text-muted-foreground">
                 Looking for someone to chat with
               </p>
             </div>
 
-            <div className="flex flex-col items-center gap-6">
+            <div key="searching-actions" className="flex flex-col items-center gap-6">
               <Loader2 className="h-16 w-16 animate-spin" />
               <Button
                 variant="outline"
@@ -162,7 +163,7 @@ function Dashboard() {
                 Cancel
               </Button>
             </div>
-          </>
+          </Fragment>
         )}
       </div>
     </div>

@@ -4,7 +4,8 @@ export const jsx = jsxRuntime
 export const jsxs = jsxsRuntime
 export { Fragment }
 
-// Map jsxDEV invocations to the production jsx helper while preserving dev-only metadata
+// Map jsxDEV to production jsx runtime for Vercel compatibility
+// Filter Symbol types (Fragment, Suspense) from receiving debug props
 export const jsxDEV = (
   type: any,
   props: any,
@@ -13,16 +14,13 @@ export const jsxDEV = (
   source?: unknown,
   self?: unknown,
 ) => {
-  if (source !== undefined || self !== undefined) {
-    const nextProps: Record<string, unknown> = { ...(props ?? {}) }
-    if (source !== undefined) {
-      nextProps.__source = source
-    }
-    if (self !== undefined) {
-      nextProps.__self = self
-    }
-    return jsxRuntime(type, nextProps, key)
+  // Symbol types (Fragment, Suspense, etc.) should not receive __source/__self
+  if (typeof type === 'symbol') {
+    return jsxRuntime(type, props, key)
   }
+  
+  // For other components, pass through without adding debug props
+  // This avoids React 19 key warnings while maintaining Vercel compatibility
   return jsxRuntime(type, props, key)
 }
 

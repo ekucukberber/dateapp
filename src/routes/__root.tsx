@@ -109,9 +109,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </head>
             <body>
               {children}
-              {showDevtools ? (
-                <TanStackRouterDevtools position="bottom-right" />
-              ) : null}
               <Scripts />
             </body>
           </html>

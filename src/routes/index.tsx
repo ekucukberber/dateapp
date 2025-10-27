@@ -8,8 +8,8 @@ export const Route = createFileRoute('/')({
 function Home() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="max-w-2xl w-full text-center space-y-12">
-        <div className="space-y-6">
+      <div className="max-w-2xl w-full text-center">
+        <div className="space-y-6 mb-12">
           <h1 className="text-7xl font-bold tracking-tight">
             Speed Date
           </h1>
