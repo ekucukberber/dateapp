@@ -1,0 +1,45 @@
+{
+  "name": "tanstack-start-example-basic",
+  "private": true,
+  "sideEffects": false,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "npx convex codegen && vite build && tsc --noEmit",
+    "start": "node .output/server/index.mjs"
+  },
+  "dependencies": {
+    "@clerk/backend": "^2.19.0",
+    "@clerk/tanstack-react-start": "^0.26.4",
+    "@convex-dev/react-query": "^0.0.0-alpha.11",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@tanstack/react-query": "^5.90.5",
+    "@tanstack/react-router": "^1.133.27",
+    "@tanstack/react-router-devtools": "^1.133.27",
+    "@tanstack/react-start": "^1.133.27",
+    "@tanstack/start": "^1.120.20",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "convex": "^1.28.0",
+    "dotenv": "^17.2.3",
+    "lucide-react": "^0.548.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "svix": "^1.80.0",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.15",
+    "@types/node": "^22.5.4",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.6.0",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^4.1.15",
+    "tsx": "^4.20.6",
+    "typescript": "^5.7.2",
+    "vite": "^7.1.7",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

@@ -1,0 +1,211 @@
+@import 'tailwindcss' source('../');
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: hsl(0 0% 100%);
+  --foreground: hsl(0 0% 3.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(0 0% 3.9%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(0 0% 3.9%);
+  --primary: hsl(0 0% 9%);
+  --primary-foreground: hsl(0 0% 98%);
+  --secondary: hsl(0 0% 96.1%);
+  --secondary-foreground: hsl(0 0% 9%);
+  --muted: hsl(0 0% 96.1%);
+  --muted-foreground: hsl(0 0% 45.1%);
+  --accent: hsl(0 0% 96.1%);
+  --accent-foreground: hsl(0 0% 9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 89.8%);
+  --input: hsl(0 0% 89.8%);
+  --ring: hsl(0 0% 3.9%);
+  --radius: 0.5rem;
+  --chart-1: hsl(12 76% 61%);
+  --chart-2: hsl(173 58% 39%);
+  --chart-3: hsl(197 37% 24%);
+  --chart-4: hsl(43 74% 66%);
+  --chart-5: hsl(27 87% 67%);
+}
+
+.dark {
+  --background: hsl(0 0% 3.9%);
+  --foreground: hsl(0 0% 98%);
+  --card: hsl(0 0% 3.9%);
+  --card-foreground: hsl(0 0% 98%);
+  --popover: hsl(0 0% 3.9%);
+  --popover-foreground: hsl(0 0% 98%);
+  --primary: hsl(0 0% 98%);
+  --primary-foreground: hsl(0 0% 9%);
+  --secondary: hsl(0 0% 14.9%);
+  --secondary-foreground: hsl(0 0% 98%);
+  --muted: hsl(0 0% 14.9%);
+  --muted-foreground: hsl(0 0% 63.9%);
+  --accent: hsl(0 0% 14.9%);
+  --accent-foreground: hsl(0 0% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(0 0% 98%);
+  --border: hsl(0 0% 14.9%);
+  --input: hsl(0 0% 14.9%);
+  --ring: hsl(0 0% 83.1%);
+  --chart-1: hsl(220 70% 50%);
+  --chart-2: hsl(160 60% 45%);
+  --chart-3: hsl(30 80% 55%);
+  --chart-4: hsl(280 65% 60%);
+  --chart-5: hsl(340 75% 55%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .using-mouse * {
+    outline: none !important;
+  }
+}
+
+/* 3D Shadow Utilities for Dating App */
+@layer utilities {
+  /* Elevated card effect */
+  .shadow-3d {
+    box-shadow:
+      0 1px 1px hsl(0 0% 0% / 0.075),
+      0 2px 2px hsl(0 0% 0% / 0.075),
+      0 4px 4px hsl(0 0% 0% / 0.075),
+      0 8px 8px hsl(0 0% 0% / 0.075),
+      0 16px 16px hsl(0 0% 0% / 0.075);
+  }
+
+  /* Subtle 3D lift */
+  .shadow-3d-sm {
+    box-shadow:
+      0 1px 2px hsl(0 0% 0% / 0.1),
+      0 2px 4px hsl(0 0% 0% / 0.1),
+      0 4px 8px hsl(0 0% 0% / 0.1);
+  }
+
+  /* Strong 3D effect */
+  .shadow-3d-lg {
+    box-shadow:
+      0 2px 4px hsl(0 0% 0% / 0.1),
+      0 4px 8px hsl(0 0% 0% / 0.1),
+      0 8px 16px hsl(0 0% 0% / 0.1),
+      0 16px 32px hsl(0 0% 0% / 0.1),
+      0 32px 64px hsl(0 0% 0% / 0.1);
+  }
+
+  /* Inset/pressed effect */
+  .shadow-3d-inset {
+    box-shadow:
+      inset 0 2px 4px hsl(0 0% 0% / 0.15),
+      inset 0 4px 8px hsl(0 0% 0% / 0.1);
+  }
+
+  /* Hover lift animation */
+  .hover-lift {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Button 3D effect */
+  .btn-3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease;
+  }
+
+  .btn-3d::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: inherit;
+    transform: translateZ(-4px);
+    border-radius: inherit;
+  }
+
+  .btn-3d:active {
+    transform: translateY(2px);
+  }
+}
+
+/* Dark mode adjustments for shadows */
+.dark .shadow-3d {
+  box-shadow:
+    0 1px 1px hsl(0 0% 0% / 0.15),
+    0 2px 2px hsl(0 0% 0% / 0.15),
+    0 4px 4px hsl(0 0% 0% / 0.15),
+    0 8px 8px hsl(0 0% 0% / 0.15),
+    0 16px 16px hsl(0 0% 0% / 0.15);
+}
+
+.dark .shadow-3d-sm {
+  box-shadow:
+    0 1px 2px hsl(0 0% 0% / 0.2),
+    0 2px 4px hsl(0 0% 0% / 0.2),
+    0 4px 8px hsl(0 0% 0% / 0.2);
+}
+
+.dark .shadow-3d-lg {
+  box-shadow:
+    0 2px 4px hsl(0 0% 0% / 0.2),
+    0 4px 8px hsl(0 0% 0% / 0.2),
+    0 8px 16px hsl(0 0% 0% / 0.2),
+    0 16px 32px hsl(0 0% 0% / 0.2),
+    0 32px 64px hsl(0 0% 0% / 0.2);
+}
