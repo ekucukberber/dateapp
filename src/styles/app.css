@@ -209,3 +209,18 @@
     0 16px 32px hsl(0 0% 0% / 0.2),
     0 32px 64px hsl(0 0% 0% / 0.2);
 }
+
+/* Animation delays for typing indicator */
+@layer utilities {
+  .animation-delay-0 {
+    animation-delay: 0ms;
+  }
+
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+}

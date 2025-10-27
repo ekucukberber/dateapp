@@ -15,6 +15,7 @@ import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary'
 import { NotFound } from '~/components/NotFound'
 import appCss from '~/styles/app.css?url'
 import { seo } from '~/utils/seo'
+import { Toaster } from '~/components/ui/sonner'
 
 const DEVTOOLS_HOST_ALLOWLIST = new Set([
   'localhost',
@@ -109,6 +110,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
             </head>
             <body>
               {children}
+              <Toaster />
               <Scripts />
             </body>
           </html>

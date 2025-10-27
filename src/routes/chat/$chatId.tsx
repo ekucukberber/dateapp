@@ -7,6 +7,7 @@ import { api } from '../../../convex/_generated/api';
 import { Id } from '../../../convex/_generated/dataModel';
 import { useState, useEffect, useRef } from 'react';
 import { Send, Clock, LogOut, Heart, X, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/chat/$chatId')({
   component: ChatPage,
@@ -21,6 +22,8 @@ function ChatPage() {
   const [myDecision, setMyDecision] = useState<boolean | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const timerExpiredRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
 
   // Convex queries - automatically reactive!
   const chatData = useQuery(api.messages.list, {
@@ -30,6 +33,53 @@ function ChatPage() {
   const sendMessage = useMutation(api.messages.send);
   const leaveChat = useMutation(api.messages.leaveChat);
   const makeDecision = useMutation(api.decisions.makeDecision);
+  const setTyping = useMutation(api.messages.setTyping);
+
+  // Handle typing indicator with debouncing
+  const handleTypingChange = (value: string) => {
+    setNewMessage(value);
+
+    // Don't send typing events if chat has ended
+    if (chatData?.chatSession?.status !== 'active') return;
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // If user is typing and we haven't sent a typing indicator yet
+    if (value.length > 0 && !isTypingRef.current) {
+      isTypingRef.current = true;
+      setTyping({
+        chatSessionId: chatId as Id<"chatSessions">,
+        isTyping: true,
+      }).catch((error) => {
+        console.error('Error setting typing status:', error);
+      });
+    }
+
+    // Set timeout to clear typing indicator after 3 seconds of no typing
+    typingTimeoutRef.current = setTimeout(() => {
+      if (isTypingRef.current) {
+        isTypingRef.current = false;
+        setTyping({
+          chatSessionId: chatId as Id<"chatSessions">,
+          isTyping: false,
+        }).catch((error) => {
+          console.error('Error clearing typing status:', error);
+        });
+      }
+    }, 3000);
+  };
+
+  // Cleanup typing timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Redirect to login if not authenticated
   if (isLoaded && !isSignedIn) {
@@ -110,6 +160,12 @@ function ChatPage() {
     if (!newMessage.trim()) return;
 
     try {
+      // Clear typing indicator
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      isTypingRef.current = false;
+
       await sendMessage({
         chatSessionId: chatId as Id<"chatSessions">,
         content: newMessage,
@@ -117,7 +173,7 @@ function ChatPage() {
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message');
+      toast.error('Failed to send message');
     }
   };
 
@@ -144,7 +200,9 @@ function ChatPage() {
       // If both decided, handle the outcome
       if (result.bothDecided) {
         if (result.matchCreated) {
-          alert("It's a match! You can now see each other's profiles");
+          toast.success("It's a match! You can now see each other's profiles", {
+            duration: 5000,
+          });
           setShowDecisionUI(false);
           // Convex will automatically update chatData with new phase
         } else {
@@ -155,7 +213,7 @@ function ChatPage() {
       }
     } catch (error) {
       console.error('Error submitting decision:', error);
-      alert('Failed to submit decision. Please try again.');
+      toast.error('Failed to submit decision. Please try again.');
     }
   };
 
@@ -193,7 +251,7 @@ function ChatPage() {
     );
   }
 
-  const { messages, chatSession, otherUser, currentUserId } = chatData;
+  const { messages, chatSession, otherUser, currentUserId, otherUserIsTyping } = chatData;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -360,6 +418,20 @@ function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Typing Indicator */}
+      {otherUserIsTyping && !chatEnded && (
+        <div className="px-6 py-2 bg-white border-t-2 border-black">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex gap-1">
+              <span className="animate-bounce animation-delay-0">●</span>
+              <span className="animate-bounce animation-delay-150">●</span>
+              <span className="animate-bounce animation-delay-300">●</span>
+            </div>
+            <span>typing...</span>
+          </div>
+        </div>
+      )}
+
       {/* Input */}
       <form
         onSubmit={handleSendMessage}
@@ -370,7 +442,7 @@ function ChatPage() {
             type="text"
             placeholder={chatEnded ? "Chat has ended" : "Type a message..."}
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => handleTypingChange(e.target.value)}
             className="flex-1"
             disabled={chatEnded}
           />

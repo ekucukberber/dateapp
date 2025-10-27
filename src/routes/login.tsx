@@ -12,6 +12,7 @@ function Login() {
         routing="hash"
         signUpUrl="/register"
         fallbackRedirectUrl="/dashboard"
+        forceRedirectUrl="/dashboard"
       />
     </div>
   );

@@ -51,11 +51,27 @@ export const list = query({
       otherUser = await ctx.db.get(otherUserId);
     }
 
+    // Determine if other user is typing
+    const isUser1 = chatSession.user1Id === user._id;
+    const otherUserTyping = isUser1
+      ? chatSession.user2Typing
+      : chatSession.user1Typing;
+    const otherUserLastTyping = isUser1
+      ? chatSession.user2LastTyping
+      : chatSession.user1LastTyping;
+
+    // Check if typing status is stale (older than 5 seconds)
+    const typingTimeout = 5000; // 5 seconds
+    const isTypingActive = otherUserTyping &&
+      otherUserLastTyping &&
+      (Date.now() - otherUserLastTyping) < typingTimeout;
+
     return {
       messages,
       chatSession,
       otherUser,
       currentUserId: user._id, // Add current user's Convex ID for message ownership comparison
+      otherUserIsTyping: isTypingActive || false,
     };
   },
 });
@@ -136,6 +152,18 @@ export const send = mutation({
       createdAt: now,
     });
 
+    // Clear typing indicator after sending message
+    const isUser1 = chatSession.user1Id === user._id;
+    if (isUser1) {
+      await ctx.db.patch(args.chatSessionId, {
+        user1Typing: false,
+      });
+    } else {
+      await ctx.db.patch(args.chatSessionId, {
+        user2Typing: false,
+      });
+    }
+
     const message = await ctx.db.get(messageId);
     return message;
   },
@@ -181,6 +209,58 @@ export const leaveChat = mutation({
 
     for (const message of messages) {
       await ctx.db.delete(message._id);
+    }
+
+    return { success: true };
+  },
+});
+
+/**
+ * Set typing indicator for current user
+ */
+export const setTyping = mutation({
+  args: {
+    chatSessionId: v.id("chatSessions"),
+    isTyping: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthenticated");
+
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_clerk_id", (q) => q.eq("clerkId", identity.subject))
+      .unique();
+
+    if (!user) throw new Error("User not found");
+
+    const chatSession = await ctx.db.get(args.chatSessionId);
+    if (!chatSession) throw new Error("Chat session not found");
+
+    // Verify user is part of this chat
+    if (chatSession.user1Id !== user._id && chatSession.user2Id !== user._id) {
+      throw new Error("Unauthorized");
+    }
+
+    // Check if chat is still active
+    if (chatSession.status !== "active") {
+      return { success: false };
+    }
+
+    // Determine which user fields to update
+    const isUser1 = chatSession.user1Id === user._id;
+    const now = Date.now();
+
+    if (isUser1) {
+      await ctx.db.patch(args.chatSessionId, {
+        user1Typing: args.isTyping,
+        user1LastTyping: now,
+      });
+    } else {
+      await ctx.db.patch(args.chatSessionId, {
+        user2Typing: args.isTyping,
+        user2LastTyping: now,
+      });
     }
 
     return { success: true };

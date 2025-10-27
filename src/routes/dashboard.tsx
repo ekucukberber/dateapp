@@ -5,6 +5,7 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { useState, useEffect, Fragment } from 'react';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const Route = createFileRoute('/dashboard')({
   component: Dashboard,
@@ -31,12 +32,17 @@ function Dashboard() {
   };
 
   const handleSignOut = async () => {
-    // Leave queue if searching
-    if (queueStatus?.inQueue) {
-      await handleCancelSearch();
+    try {
+      // Leave queue if searching
+      if (queueStatus?.inQueue) {
+        await handleCancelSearch();
+      }
+      // Sign out with explicit redirect - this clears the Clerk session
+      await signOut({ redirectUrl: window.location.origin + '/login' });
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast.error('Failed to sign out. Please try again.');
     }
-    await signOut();
-    navigate({ to: '/' });
   };
 
   // Redirect to login if not authenticated
@@ -92,7 +98,7 @@ function Dashboard() {
     } catch (error: any) {
       console.error('Error joining queue:', error);
       // Show user-friendly error message
-      alert(error?.message || 'Failed to join queue. Please try again.');
+      toast.error(error?.message || 'Failed to join queue. Please try again.');
     } finally {
       setIsJoining(false);
     }
